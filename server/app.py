@@ -27,7 +27,25 @@ def index_articles():
 
 @app.route('/articles/<int:id>')
 def show_article(id):
-    pass
+    article = Article.query.filter(Article.id == id).first()
+    if not article:
+        return make_response(jsonify({'message': 'Article not found'}), 404)
+
+    # Initialize counter
+    if 'page_views' not in session:
+        session['page_views'] = 0
+
+    # Increment counter
+    session['page_views'] += 1
+
+    # Allow only up to 3 views
+    if session['page_views'] <= 3:
+        serialized_article = ArticleSchema().dump(article)
+        return make_response(serialized_article, 200)
+    else:
+        return make_response(
+            jsonify({'message': 'Maximum pageview limit reached'}), 401
+        )
 
 
 if __name__ == '__main__':
